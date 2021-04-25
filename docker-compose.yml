@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  influxdb:
+    image: influxdb:${INFLUX_VERSION}
+    container_name: influxdb
+    restart: always
+    ports:
+      - 8086:8086
+    networks:
+      - monitoring_network
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=jmeter
+      - INFLUXDB_ADMIN_ENABLED=true
+      - INFLUXDB_ADMIN_USER=${INFLUX_USERNAME}
+      - INFLUXDB_ADMIN_PASSWORD=${INFLUX_PASSWORD}
+      
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - monitoring_network
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+            
+networks:
+  monitoring_network:
+    driver: bridge
+volumes:
+  grafana_data:
+  influxdb_data:
